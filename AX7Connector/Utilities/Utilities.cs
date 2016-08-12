@@ -14,25 +14,29 @@ namespace AX7Connector.Utilities
 {
     public class AXUtilities
     {
-        string authenticationHeader;
-        public string AuthenticationHeader
+        public static string authorizationHeader;
+        public static AuthenticationResult AuthenticationResult { get; private set; }
+
+        /// <summary>
+        /// Property that gets the AuthorizationHeader
+        /// </summary>
+        public static string AuthorizationHeader
         {
             get
             {
-                return authenticationHeader;
+                if (string.IsNullOrEmpty(authorizationHeader) || (AuthenticationResult != null && DateTime.UtcNow.AddSeconds(60) >= AuthenticationResult.ExpiresOn))
+                {
+                    AuthenticationContext authenticationContext = new AuthenticationContext(ClientConfiguration.Default.ActiveDirectoryTenant);
+
+                    UserCredential userCred = new UserCredential(ClientConfiguration.Default.UserName, ClientConfiguration.Default.Password);
+
+                    AuthenticationResult = authenticationContext.AcquireToken(ClientConfiguration.Default.ActiveDirectoryResource, ClientConfiguration.Default.ActiveDirectoryClientAppId, userCred);
+
+                    authorizationHeader = AuthenticationResult.CreateAuthorizationHeader();
+                }
+
+                return authorizationHeader;
             }
-        }
-
-        public AXUtilities()
-        {
-            //authentication string details
-            AuthenticationContext authenticationContext = new AuthenticationContext(ClientConfiguration.Default.ActiveDirectoryTenant);
-
-            UserCredential userCred = new UserCredential(ClientConfiguration.Default.UserName, ClientConfiguration.Default.Password);
-
-            AuthenticationResult authenticationResult = authenticationContext.AcquireToken(ClientConfiguration.Default.ActiveDirectoryResource, ClientConfiguration.Default.ActiveDirectoryClientAppId, userCred);
-
-            authenticationHeader = authenticationResult.CreateAuthorizationHeader();
         }
 
         /// <summary>
@@ -84,14 +88,14 @@ namespace AX7Connector.Utilities
             }
         }
 
-        public async Task<HttpResponseMessage> GetRequestAsync(Uri uri, string authenticationHeader)
+        public async Task<HttpResponseMessage> GetRequestAsync(Uri uri)
         {
             HttpResponseMessage responseMessage;
             using (HttpClientHandler handler = new HttpClientHandler() { UseCookies = false })
             {
                 using (HttpClient webClient = new HttpClient(handler))
                 {
-                    webClient.DefaultRequestHeaders.Authorization = ParseAuthenticationHeader(authenticationHeader);
+                    webClient.DefaultRequestHeaders.Authorization = AXUtilities.GetValidAuthenticationHeader();
 
                     responseMessage = await webClient.GetAsync(uri).ConfigureAwait(false);
                 }
@@ -111,6 +115,15 @@ namespace AX7Connector.Utilities
                     return response;
                 }
             }
+        }
+
+        /// <summary>
+        /// Get a valid authentication header
+        /// </summary>
+        /// <returns>AuthenticationHeaderValue object</returns>
+        public static AuthenticationHeaderValue GetValidAuthenticationHeader()
+        {
+            return AXUtilities.ParseAuthenticationHeader(AXUtilities.AuthorizationHeader);
         }
 
         private static AuthenticationHeaderValue ParseAuthenticationHeader(string authenticationHeader)

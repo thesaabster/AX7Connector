@@ -12,18 +12,18 @@ namespace AX7Connector.Utilities
 
         public static ClientConfiguration OneBox = new ClientConfiguration()
         {
-            UriString = "https://paulwuax7-ctp8aos.cloudax.dynamics.com/",
+           UriString = "https://paulwuupdate1aos.cloudax.dynamics.com/",
 
             #region
-            UserName = "qipengwu@pwax7.onmicrosoft.com",
-            Password = "Pass1Word",
+            UserName = "",
+            Password = "",
             #endregion
 
-            ActiveDirectoryResource = "https://paulwuax7-ctp8aos.cloudax.dynamics.com",
+            ActiveDirectoryResource = "https://paulwuupdate1aos.cloudax.dynamics.com",
             ActiveDirectoryTenant = "https://login.windows.net/pwax7.onmicrosoft.com",
-            ActiveDirectoryClientAppId = "f00ced34-2591-41f4-b22d-5005000f05be",
-            CustomerImportActivityId = "D595048A-65D8-4BDC-B4D7-5B3AAA82EC69",
-            RentalImportActivityId = "2BD483F3-BB15-4562-9E5B-F1875DECEA97"
+            ActiveDirectoryClientAppId = "",
+            CustomerImportActivityId = "",
+            RentalImportActivityId = ""
         };
 
     public string UriString { get; set; }
