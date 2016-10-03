@@ -11,11 +11,15 @@ using System.Web.Http;
 using AX7Connector.Models;
 using AX7Connector.Utilities;
 using System.IO;
+using AX7Connector.Microsoft.Dynamics.DataEntities;
+using Microsoft.OData.Client;
 
 namespace AX7Connector.Controllers
 {
     public class DIXFController : ApiController
     {
+
+
 
         [HttpPost]
         [Route("dixf/import")]
@@ -29,35 +33,40 @@ namespace AX7Connector.Controllers
             if (entity == null)
                 return string.Empty;
 
-            string[] folderSegments = entity.Name.Split(new string[]{ "/"}, StringSplitOptions.RemoveEmptyEntries);
+            /*uri = new Uri("https://dev-matt-3devaos.cloudax.dynamics.com/data");
 
-            if (folderSegments.Length < 1)
-                return string.Empty;
+            var context = new Resources(uri);
+            context.SendingRequest2 += new EventHandler<SendingRequest2EventArgs>(delegate (object sender, SendingRequest2EventArgs e)
+            {
+                e.RequestMessage.SetHeader("Authorization", AXUtilities.AuthorizationHeader);
+            });
 
-            string entityName = folderSegments[folderSegments.Length - 2];
+            var myendpoint = from EndPoint in context.IntegrationDataProjectEndpoints
+                             where EndPoint.LegacySourceEndpointId == entity.SourceEndpointId
+                             select EndPoint;
+            */
+
+            string entityName = "Customer groups";// myendpoint.First().EntityName;
 
             AXUtilities axUtil = new AXUtilities();
 
             UriBuilder enqueueUri = new UriBuilder(ClientConfiguration.Default.ActiveDirectoryResource);
-            string activityId = string.Empty;
+            string activityId = "bd2578ac-9690-4b93-908e-ccfb3b786f42";//myendpoint.First().ActivityId.ToString();
 
-            switch (entityName)
-            {
-                case "Fleet Management Customers":
-                    activityId = ClientConfiguration.Default.CustomerImportActivityId;
-                    break;
-
-                case "Fleet Management Rentals":
-                    activityId = ClientConfiguration.Default.RentalImportActivityId;
-                    break;
-            }
 
             enqueueUri.Path = string.Format(@"api/connector/enqueue/{0}", activityId);
             
             string enqueueQuery = string.Format("entity={0}", entityName);
-           
-            enqueueUri.Query = enqueueQuery;
 
+            string company = "wcf";//myendpoint.First().Company
+
+            if (!string.IsNullOrEmpty(company))
+            {
+                enqueueQuery += "&company=" + company;
+            }
+
+
+            enqueueUri.Query = enqueueQuery;
 
             HttpResponseMessage response = null;
             
